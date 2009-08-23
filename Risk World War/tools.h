@@ -40,15 +40,7 @@ bool load_territories(Territory allTerritories[])
 	}
 }
 
-bool allTerTaken(Info_Handler & IH)
-{
-	for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
-	{
-		if(IH.allTerritories[i].getOwner() == -1)
-			return false;
-	}
-	return true;
-}
+
 
 void compGrabRandom(Info_Handler & IH, int player)
 {
@@ -61,17 +53,35 @@ void compGrabRandom(Info_Handler & IH, int player)
 		{
 			IH.allTerritories[random].setOwner(player);
 			IH.allTerritories[random].modTroops(1);
+			IH.allPlayers[player].decrementReinforcements();
+			IH.allPlayers[player].addTerritory(random);
+			if(IH.allPlayers[player].getNumberOfTerritories() == 1)
+			{
+				IH.allTerritories[random].setAsCapitol();
+				IH.allPlayers[player].setCapitol(random);
+			}
 			looking = false;
 		}
 	}
 }
 
+void compReenforceRandom(Info_Handler & IH, int player)
+{
+	int rand = (getRandomNum() % IH.allPlayers[player].getNumberOfTerritories());
+	IH.allTerritories[IH.allPlayers[player].getTerritory(rand)].modTroops(1);
+	IH.allPlayers[player].decrementReinforcements();
+}
+
 void drawAll(Info_Handler & IH, char * util)
 {
+
 	itoa(SDL_GetTicks() / 1000, util, 10);
 	writeText(IH.ascii, &IH.asciiRect, IH.screen, util, IH.screen->w - 400, IH.screen->h - IH.asciiRect.h);
+	drawATile(IH.hud1, &IH.hudRect, 0, IH.screen, IH.hudRect.x, IH.hudRect.y);
 	SDL_FillRect(IH.screen, &IH.consoleRect, 0x000000);
 	writeToConsole(IH.ascii, &IH.asciiRect, IH.screen, IH.outputMessage, &IH.consoleRect);
+	itoa(IH.allPlayers[1].getReinforce(), util, 10);
+	writeText(IH.ascii, &IH.asciiRect, IH.screen, util, 0, 200);
 	switch(IH.state)
 	{
 	case 0:	
@@ -80,19 +90,23 @@ void drawAll(Info_Handler & IH, char * util)
 	case 1:
 		break;
 	case 2:
+		break;
+	case 3:
 		drawATile(IH.buttons, &IH.buttonRect, 1, IH.screen, 0,0);
 		break;
 	}
 	for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
 	{
 		drawATile(IH.borders, &IH.borderRect, IH.allTerritories[i].getOwner() + 1, IH.screen, IH.allTerritories[i].getRect().x, IH.allTerritories[i].getRect().y);
+		if(IH.allTerritories[i].isCapitol())
+			drawATile(IH.borders, &IH.borderRect, 7, IH.screen, IH.allTerritories[i].getRect().x, IH.allTerritories[i].getRect().y);
 		//writeText(IH.ascii, &IH.asciiRect, IH.screen, IH.allTerritories[i].getName().c_str(), IH.allTerritories[i].getRect().x, IH.allTerritories[i].getRect().y);
 	}
 	for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
 	{
 		if(IH.allTerritories[i].isHighlighted())
 		{
-			drawATile(IH.borders, &IH.borderRect, 1, IH.screen, IH.allTerritories[i].getRect().x, IH.allTerritories[i].getRect().y);
+			drawATile(IH.borders, &IH.borderRect, 0, IH.screen, IH.allTerritories[i].getRect().x, IH.allTerritories[i].getRect().y);
 			for(int j = 0; j < NUM_OF_TERRITORIES; ++j)
 			{
 				if(IH.allTerritories[i].isConnTo(j) && IH.allTerritories[j].getOwner() == IH.allTerritories[i].getOwner())
@@ -108,19 +122,6 @@ void drawAll(Info_Handler & IH, char * util)
 	}
 }
 
-int checkTerClicked(Info_Handler & IH)
-{
-	for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
-	{
-		if( IH.event.motion.x > IH.allTerritories[i].getRect().x && 
-			IH.event.motion.x < IH.allTerritories[i].getRect().x + IH.allTerritories[i].getRect().w &&
-			IH.event.motion.y > IH.allTerritories[i].getRect().y && 
-			IH.event.motion.y < IH.allTerritories[i].getRect().y + IH.allTerritories[i].getRect().h)
-			return i;
-	}
-	return -1;
-}
-
 void update(Info_Handler & IH, int msPassed)
 {
 	IH.displayTimer += msPassed;
@@ -130,34 +131,31 @@ void update(Info_Handler & IH, int msPassed)
 		IH.displayTimer = 0;
 	}
 
-	if(IH.state == 1 && !allTerTaken(IH) && IH.playersTurn > 1)
+	if(IH.state == 1 && !IH.allTerTaken() && IH.playersTurn > 0)
 	{
-		for(int i = 2; i <= IH.numOfPlayers; ++i)
+		for(int i = 1; i < IH.numOfPlayers; ++i)
 		{			
-			if(!allTerTaken(IH))
-				compGrabRandom(IH, IH.playersTurn);	
+			if(!IH.allTerTaken())
+				compGrabRandom(IH, IH.playersTurn);
 			IH.playersTurn++;
 		}
-		IH.playersTurn = 1;
+		IH.playersTurn = 0;
 	}
-	else if(IH.state == 1 && allTerTaken(IH))
+	else if(IH.state == 1 && IH.allTerTaken())
 		IH.state++;
-}
-
-string putDataInString(Info_Handler & IH, int terr)
-{
-	char util[256];
-	string output = "";
-	
-	output += IH.allTerritories[terr].getName();
-	output += "^nOwner Player: ";
-	itoa(IH.allTerritories[terr].getOwner(), util, 10);
-	output += util;
-	output += "^nTroops: ";
-	itoa(IH.allTerritories[terr].getTroops(), util, 10);
-	output += util;
-
-	return output;
+	if(IH.state == 2 && IH.playersTurn > 0)
+	{
+		for(int i = 1; i < IH.numOfPlayers; ++i)
+		{
+			if(IH.allPlayers[i].getReinforce() > 0)
+			{
+				compReenforceRandom(IH, i);
+			}
+		}
+		IH.playersTurn = 0;
+	}
+	else if(IH.state == 2 && IH.allReinforced())
+		IH.state++;
 }
 
 void eventHandler(Info_Handler & IH)
@@ -188,11 +186,11 @@ void eventHandler(Info_Handler & IH)
 	}
 	if(IH.event.type == SDL_MOUSEBUTTONDOWN)
 	{
-		if(IH.event.button.button == SDL_BUTTON_LEFT && IH.playersTurn == 1) 
+		if(IH.event.button.button == SDL_BUTTON_LEFT && IH.playersTurn == 0) 
 		{
 			for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
 				IH.allTerritories[i].dehighlight();
-			temp = checkTerClicked(IH);
+			temp = IH.checkTerClicked();
 			if(temp >= 0)
 			{
 				switch(IH.state)
@@ -202,17 +200,40 @@ void eventHandler(Info_Handler & IH)
 				case 1:
 					if(IH.allTerritories[temp].getOwner() == -1)
 					{
-						IH.allTerritories[temp].setOwner(1);
+						IH.allPlayers[0].addTerritory(temp);
+						IH.allTerritories[temp].setOwner(0);
 						IH.allTerritories[temp].modTroops(1);
+						IH.allPlayers[0].decrementReinforcements();
+						if(IH.allPlayers[0].getNumberOfTerritories() == 1)
+						{
+							IH.allPlayers[0].setCapitol(temp);
+							IH.allTerritories[temp].setAsCapitol();
+						}
 						IH.playersTurn++;
 					}
 					break;
 				case 2:
-					IH.allTerritories[temp].highlight();
-					IH.outputMessage = putDataInString(IH, temp);
-					IH.displayTimer = 0;
+					if(IH.allTerritories[temp].getOwner() == 0)
+					{
+						IH.allTerritories[temp].modTroops(1);
+						IH.allPlayers[0].decrementReinforcements();
+						IH.playersTurn++;
+						IH.outputMessage = IH.putDataInString(temp);
+						IH.displayTimer = 0;
+					}
+					else
+					{
+						IH.allTerritories[temp].highlight();
+						IH.outputMessage = IH.putDataInString(temp);
+						IH.displayTimer = 0;
+					}
 					break;
 				case 3:
+					IH.allTerritories[temp].highlight();
+					IH.outputMessage = IH.putDataInString(temp);
+					IH.displayTimer = 0;
+					break;
+				case 4:
 					break;
 				}
 				

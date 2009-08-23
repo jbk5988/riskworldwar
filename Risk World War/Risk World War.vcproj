@@ -184,7 +184,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\InfoHandler.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MersenneTwister.h"
+				>
+			</File>
+			<File
+				RelativePath=".\playerClass.h"
 				>
 			</File>
 			<File
