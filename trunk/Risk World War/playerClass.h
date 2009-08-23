@@ -9,17 +9,36 @@ private:
 	int playerNumber;
 	int capitol;
 	int numberOfTerritories;
+	int numOfTroopsToReinforce;
+	int territoriesOwned[NUM_OF_TERRITORIES];
+	bool alive;
 public:
+	Player()
+		:playerName("Fred"), playerNumber(-1), capitol(-1),  numberOfTerritories(0), alive(false), numOfTroopsToReinforce(0)
+	{
+		for(int i = 0; i < NUM_OF_TERRITORIES; ++i)
+			territoriesOwned[i] = -1;
+	}
 	Player(string, int, int, int);
-	void setPlayerStats(string, int, int, int);
-	void setPlayerName(string);
-	void setPlayerNumber(int);
-	void setCapitol(int);
-	void setNumOfTerritories(int);
-	string getPlayerName();
-	int getPlayerNumber();
-	int getCapitol();
-	int getNumberOfTerritories();
+	void setPlayerStats(string, int, int, int, bool);
+	void addTerritory(int terrToAdd);
+	void loseTerritory(int terrToLose);
+	bool ownTerritory(int terrToCheck);
+
+	void setPlayerName(string newName) {playerName = newName;}
+	void setPlayerNumber(int newNum) {playerNumber = newNum;}
+	void setCapitol(int newCap) {capitol = newCap;}
+	void setNumOfTerritories(int newNum) {numberOfTerritories = newNum;}
+	void setAlive(bool isAlive) {alive = isAlive;}
+	void setReinforce(int newTroops) {numOfTroopsToReinforce = newTroops;}
+	void decrementReinforcements() {numOfTroopsToReinforce--;}
+	string getPlayerName() {return playerName;}
+	int getPlayerNumber() {return playerNumber;}
+	int getCapitol() {return capitol;}
+	int getNumberOfTerritories() {return numberOfTerritories;}
+	int getReinforce() {return numOfTroopsToReinforce;}
+	int getTerritory(int terrToGet) {return territoriesOwned[terrToGet];}
+	bool getAlive() {return alive;}
 };
 Player::Player(string name, int number, int cap, int territories)
 {
@@ -27,43 +46,43 @@ Player::Player(string name, int number, int cap, int territories)
 	playerNumber = number;
 	capitol = cap;
 	numberOfTerritories = territories;
+	alive = true;
 }
-void Player::setPlayerStats(string name, int number, int cap, int territories);
+void Player::setPlayerStats(string name, int number, int cap, int territories, bool isAlive)
 {
 	playerName = name;
 	playerNumber = number;
 	capitol = cap;
 	numberOfTerritories = territories;
+	alive = isAlive;
 }
-void Player::setPlayerName(string name)
+
+void Player::addTerritory(int terrToAdd)
 {
-	playerName = name;
+	territoriesOwned[numberOfTerritories] = terrToAdd;
+	numberOfTerritories++;
 }
-void Player::setPlayerNumber(int number)
+
+void Player::loseTerritory(int terrToLose)
 {
-	playerNumber = number;
+	bool removed = false;
+	for(int i = 0; i < numberOfTerritories -1; ++i)
+	{
+		if(territoriesOwned[i] == terrToLose)
+			removed = true;
+		if(removed)
+			territoriesOwned[i] = territoriesOwned[i + 1];
+	}
+	if(removed)
+		numberOfTerritories--;
 }
-void Player::setCapitol(int cap)
+
+bool Player::ownTerritory(int terrToCheck)
 {
-	capitol = cap;
-}
-void Player::setNumOfTerritories(int territories)
-{
-	numberOfTerritories = territories;
-}
-string Player::getPlayerName()
-{
-	return playerName;
-}
-int Player::getPlayerNumber()
-{
-	return playerNumber;
-}
-int Player::getCapitol()
-{
-	return capitol;
-}
-int Player::getNumberOfTerritories()
-{
-	return numberOfTerritories;
+	for(int i = 0; i < numberOfTerritories; ++i)
+	{
+		if(territoriesOwned[i] == terrToCheck)
+			return true;
+	}
+	return false;
 }
