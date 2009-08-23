@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Risk World War", "Risk World War\Risk World War.vcproj", "{B5230279-064E-4D20-8F58-E5FF73F9FE29}"
 EndProject
 Global

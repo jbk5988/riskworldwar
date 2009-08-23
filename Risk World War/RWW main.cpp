@@ -25,12 +25,13 @@ public:
 	SDL_Rect asciiRect, mapRect, borderRect, consoleRect, buttonRect;
 	SDL_Event event;
 	bool keepGoing;
+	bool isFullScreen;
 
 	string outputMessage;
 
 	int displayTimer, displayTimerMax, state, playersTurn, numOfPlayers;
 	Info_Handler()
-		:keepGoing(true), state(0), displayTimer(0), displayTimerMax(5000), playersTurn(1), numOfPlayers(4)
+		:keepGoing(true), isFullScreen(false), state(0), displayTimer(0), displayTimerMax(5000), playersTurn(1), numOfPlayers(4)
 	{
 		allTerritories = new Territory[NUM_OF_TERRITORIES];
 		screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
@@ -47,8 +48,8 @@ public:
 		mapRect.h = 720;
 		borderRect.x = borderRect.y = 0;
 		borderRect.h = borderRect.w = 20;
-		consoleRect.h = 330;
-		consoleRect.w = 200;
+		consoleRect.h = 280;
+		consoleRect.w = 170;
 		consoleRect.x = 0;
 		consoleRect.y = screen->h - consoleRect.h;
 

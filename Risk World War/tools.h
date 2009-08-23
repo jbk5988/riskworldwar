@@ -165,6 +165,27 @@ void eventHandler(Info_Handler & IH)
 	int temp;
 	if(IH.event.type == SDL_QUIT)
 		IH.keepGoing = false;
+	if(IH.event.type == SDL_KEYDOWN)
+	{
+		switch(IH.event.key.keysym.sym)
+		{
+		case SDLK_ESCAPE:
+			IH.keepGoing = false;
+			break;
+		case SDLK_F3:
+			if(IH.isFullScreen)
+			{
+				IH.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE | SDL_SWSURFACE);
+				IH.isFullScreen = false;
+			}
+			else
+			{
+				IH.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_FULLSCREEN);
+				IH.isFullScreen = true;
+			}
+			break;
+		}
+	}
 	if(IH.event.type == SDL_MOUSEBUTTONDOWN)
 	{
 		if(IH.event.button.button == SDL_BUTTON_LEFT && IH.playersTurn == 1) 
